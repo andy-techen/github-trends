@@ -1,5 +1,5 @@
 # github-trends
-A tool to fetch popular repos and keywords on Github.
+A tool to fetch popular repos and keywords on Github/Twitter.
 
 ## Requirements
 - numpy 1.19.0
