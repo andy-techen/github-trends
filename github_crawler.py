@@ -25,7 +25,6 @@ from secrets import *
 # base variables
 BASE_API = "https://api.github.com/search/repositories?q="
 token_header = {'Authorization': 'token ' + g_access_token}
-keywords_ls = ["vpn", "anonymous browsing", "online tracking", "online surveillance"]
 
 # keyword extraction preps
 stop = stopwords.words('english') + list(string.punctuation)
@@ -56,7 +55,7 @@ def get_keywords(df):
     return pd.DataFrame(values, columns=features)
 
 # obtain tweets
-def get_twitter_query(keywords=keywords_ls):
+def get_twitter_query(keywords):
     keywords_str = '"' + '" OR "'.join(keywords) + '"'
     results = api.search(keywords_str, count=100, tweet_mode='extended', lang='en')
     results_df = pd.json_normalize([r._json for r in results])
@@ -64,13 +63,13 @@ def get_twitter_query(keywords=keywords_ls):
     return results_df['full_text']
 
 # obtain keywords from tweets
-def get_twitter_keywords(n_words=50):
-    tweets_df = get_twitter_query()
+def get_twitter_keywords(keywords, n_words=50):
+    tweets_df = get_twitter_query(keywords)
     keywords_df = get_keywords(tweets_df)
     return tweets_df, keywords_df.agg('sum').nlargest(n_words)
 
 # obtain github repos
-def get_github_query(min_stars=10, min_forks=10, n_repos=50, keywords=keywords_ls):
+def get_github_query(keywords, min_stars=10, min_forks=10, n_repos=50):
     # construct query
     keywords_str = '"' + '"+OR+"'.join(keywords) + '"'
     filters_str = "&stars:>{}&forks:>{}&sort=stars&per_page={}".format(min_stars, min_forks, n_repos)
@@ -87,14 +86,16 @@ def get_github_query(min_stars=10, min_forks=10, n_repos=50, keywords=keywords_l
     ct = 1
     for i in repos_df['url']:
         print(f'Fetching Repo #{ct}: {i}')
-        try:
-            readme_url = i + "/contents/README.md?ref=master"
-            r = requests.get(readme_url, headers=token_header)
+        readme_url = i + "/contents/README.md?ref=master"
+        r = requests.get(readme_url, headers=token_header)
+        if r.status_code == 200:
             readme = json.loads(r.content)['content']
             readme_text = pybase64.b64decode(readme).decode('utf-8')
             readme_text = re.sub(r"[^\w\s'.:/]",'',readme_text).replace('\n',' ')
             readme_ls.append(readme_text)
-        except KeyError:
+        elif r.status_code == 401:
+            print("Renew Github Token!")
+        else:
             readme_ls.append(np.nan)
         ct += 1
     repos_df['readme'] = readme_ls
@@ -105,8 +106,8 @@ def get_github_query(min_stars=10, min_forks=10, n_repos=50, keywords=keywords_l
     return repos_df
 
 # obtain keywords from repos
-def get_github_keywords(n_words=50):
-    repos_df = get_github_query()
+def get_github_keywords(keywords, n_words=50, min_stars=10, min_forks=10, n_repos=50):
+    repos_df = get_github_query(keywords, min_stars, min_forks, n_repos)
     text_cols = ['name', 'description', 'readme']
     repos_df['content'] = repos_df[text_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
     repos_df.dropna(subset=['content'], inplace=True)
@@ -115,11 +116,15 @@ def get_github_keywords(n_words=50):
 
 
 if __name__ == '__main__':
-    twitter_keywords = get_twitter_keywords()[1]
-    github_repos, github_keywords = get_github_keywords()
+    base_keywords = ["vpn", "anonymous browsing", "online tracking", "online surveillance"]
+    keywords = input("Keywords (sep with '/'): ") or "/".join(base_keywords)
+    n_repos = int(input("Number of Repos: ") or 50)
+    keywords = keywords.split('/')
+    twitter_keywords = get_twitter_keywords(keywords=keywords)[1]
+    github_repos, github_keywords = get_github_keywords(keywords=keywords, n_repos=n_repos)
     date = datetime.now().strftime('%Y_%m_%d')
 
-    with pd.ExcelWriter(f'{date}.xlsx') as writer:
+    with pd.ExcelWriter(f'{date}_test.xlsx') as writer:
         twitter_keywords.to_excel(writer, 'twitter_keywords', header=['sum_tfidf'], index_label='term')
         github_repos.to_excel(writer, 'github_repos', index=False, encoding='utf-8')
         github_keywords.to_excel(writer, 'github_keywords', header=['sum_tfidf'], index_label='term', encoding='utf-8')
