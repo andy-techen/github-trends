@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 from datetime import datetime
+import sys
 # apis
 import requests
 from tweepy import API, OAuthHandler
@@ -77,7 +78,10 @@ def get_github_query(keywords, min_stars=10, min_forks=10, n_repos=50):
 
     # collect metadata
     q = requests.get(query, headers=token_header)
-    repos = json.loads(q.content)['items']
+    if q.status_code != 401:
+        repos = json.loads(q.content)['items']
+    else:
+        sys.exit('Renew Github Token!')
     repos_df = pd.DataFrame(repos)
     repos_df = repos_df.loc[:, ['name', 'html_url', 'description', 'forks', 'stargazers_count', "url"]]
 
@@ -94,7 +98,7 @@ def get_github_query(keywords, min_stars=10, min_forks=10, n_repos=50):
             readme_text = re.sub(r"[^\w\s'.:/]",'',readme_text).replace('\n',' ')
             readme_ls.append(readme_text)
         elif r.status_code == 401:
-            print("Renew Github Token!")
+            sys.exit("Renew Github Token!")
         else:
             readme_ls.append(np.nan)
         ct += 1
