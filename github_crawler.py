@@ -14,9 +14,9 @@ from tweepy import API, OAuthHandler
 import string
 import re
 import pybase64
-# import nltk
-# nltk.download('stopwords')
-# nltk.download('punkt')
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
@@ -133,8 +133,7 @@ if __name__ == '__main__':
     keywords = keywords.split('/')
     twitter_keywords = get_twitter_keywords(keywords=keywords)[1]
     github = GitHub(keywords=keywords, n_repos=n_repos)
-    github_repos = github.get_github_query()
-    github_keywords = github.get_github_keywords()
+    github_repos, github_keywords = github.get_github_keywords()
     date = datetime.now().strftime('%Y_%m_%d')
 
     with pd.ExcelWriter(f'{date}.xlsx') as writer:
