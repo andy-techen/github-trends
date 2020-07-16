@@ -1,7 +1,12 @@
-numpy==1.19.0
-pandas==1.0.5
+dash_html_components==1.0.3
 requests==2.24.0
-pybase64==1.0.1
-nltk==3.5
+numpy==1.19.0
 tweepy==3.8.0
+dash_core_components==1.10.1
+plotly==4.8.2
+dash==1.13.4
+pandas==1.0.5
+pybase64==1.0.1
+dash_bootstrap_components==0.10.3
+nltk==3.5
 scikit_learn==0.23.1

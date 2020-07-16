@@ -29,7 +29,7 @@ token_header = {'Authorization': 'token ' + g_access_token}
 
 # keyword extraction preps
 stop = stopwords.words('english') + list(string.punctuation)
-update_stop = ["rt", "com", "could"]
+update_stop = ["rt", "com", "could", "www", "github", "br", "nan", "io", "py", "master", "td"]
 stop.extend(update_stop)
 cv = CountVectorizer(ngram_range=(1,2))
 transformer = TfidfTransformer()
@@ -69,54 +69,61 @@ def get_twitter_keywords(keywords, n_words=50):
     keywords_df = get_keywords(tweets_df)
     return tweets_df, keywords_df.agg('sum').nlargest(n_words)
 
-# obtain github repos
-def get_github_query(keywords, min_stars=10, min_forks=10, n_repos=50):
-    # construct query
-    keywords_str = '"' + '"+OR+"'.join(keywords) + '"'
-    filters_str = "&stars:>{}&forks:>{}&sort=stars&per_page={}".format(min_stars, min_forks, n_repos)
-    query = BASE_API + keywords_str + filters_str
+class GitHub:
+    def __init__(self, keywords, min_stars=10, min_forks=10, n_repos=50):
+        self.keywords = keywords
+        self.min_stars = min_stars
+        self.min_forks = min_forks
+        self.n_repos = n_repos
 
-    # collect metadata
-    q = requests.get(query, headers=token_header)
-    if q.status_code != 401:
-        repos = json.loads(q.content)['items']
-    else:
-        sys.exit('Renew Github Token!')
-    repos_df = pd.DataFrame(repos)
-    repos_df = repos_df.loc[:, ['name', 'html_url', 'description', 'forks', 'stargazers_count', "url"]]
+    # obtain github repos
+    def get_github_query(self):
+        # construct query
+        keywords_str = '"' + '"+OR+"'.join(self.keywords) + '"'
+        filters_str = "&stars:>{}&forks:>{}&sort=stars&per_page={}".format(self.min_stars, self.min_forks, self.n_repos)
+        query = BASE_API + keywords_str + filters_str
 
-    # collect readme files
-    readme_ls = []
-    ct = 1
-    for i in repos_df['url']:
-        print(f'Fetching Repo #{ct}: {i}')
-        readme_url = i + "/contents/README.md?ref=master"
-        r = requests.get(readme_url, headers=token_header)
-        if r.status_code == 200:
-            readme = json.loads(r.content)['content']
-            readme_text = pybase64.b64decode(readme).decode('utf-8')
-            readme_text = re.sub(r"[^\w\s'.:/]",'',readme_text).replace('\n',' ')
-            readme_ls.append(readme_text)
-        elif r.status_code == 401:
-            sys.exit("Renew Github Token!")
+        # collect metadata
+        q = requests.get(query, headers=token_header)
+        if q.status_code != 200:
+            sys.exit('Renew Github Token!')
         else:
-            readme_ls.append(np.nan)
-        ct += 1
-    repos_df['readme'] = readme_ls
+            repos = json.loads(q.content)['items']
+        repos_df = pd.DataFrame(repos)
+        repos_df = repos_df.loc[:, ['name', 'html_url', 'description', 'forks', 'stargazers_count', "url"]]
 
-    repos_df.drop(['url'], axis=1, inplace=True)
-    repos_df.columns = ['name', 'url', 'description', 'forks', 'stars', 'readme']
-    print("Fetched Repos")
-    return repos_df
+        # collect readme files
+        readme_ls = []
+        ct = 1
+        for i in repos_df['url']:
+            print(f'Fetching Repo #{ct}: {i}')
+            readme_url = i + "/contents/README.md?ref=master"
+            r = requests.get(readme_url, headers=token_header)
+            if r.status_code == 200:
+                readme = json.loads(r.content)['content']
+                readme_text = pybase64.b64decode(readme).decode('utf-8')
+                readme_text = re.sub(r"[^\w\s'.:/]",'',readme_text).replace('\n',' ')
+                readme_ls.append(readme_text)
+            elif r.status_code == 401:
+                sys.exit("Renew Github Token!")
+            else:
+                readme_ls.append(np.nan)
+            ct += 1
+        repos_df['readme'] = readme_ls
 
-# obtain keywords from repos
-def get_github_keywords(keywords, n_words=50, min_stars=10, min_forks=10, n_repos=50):
-    repos_df = get_github_query(keywords, min_stars, min_forks, n_repos)
-    text_cols = ['name', 'description', 'readme']
-    repos_df['content'] = repos_df[text_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
-    repos_df.dropna(subset=['content'], inplace=True)
-    keywords_df = get_keywords(repos_df['content'])
-    return repos_df.drop(['content'], axis=1), keywords_df.agg('sum').nlargest(n_words)
+        repos_df.drop(['url'], axis=1, inplace=True)
+        repos_df.columns = ['name', 'url', 'description', 'forks', 'stars', 'readme']
+        print("Fetched Repos")
+        return repos_df
+
+    # obtain keywords from repos
+    def get_github_keywords(self, n_words=50):
+        repos_df = self.get_github_query()
+        text_cols = ['name', 'description', 'readme']
+        repos_df['content'] = repos_df[text_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
+        repos_df.dropna(subset=['content'], inplace=True)
+        keywords_df = get_keywords(repos_df['content'])
+        return repos_df.drop(['content'], axis=1), keywords_df.agg('sum').nlargest(n_words)
 
 
 if __name__ == '__main__':
@@ -125,10 +132,12 @@ if __name__ == '__main__':
     n_repos = int(input("Number of Repos: ") or 50)
     keywords = keywords.split('/')
     twitter_keywords = get_twitter_keywords(keywords=keywords)[1]
-    github_repos, github_keywords = get_github_keywords(keywords=keywords, n_repos=n_repos)
+    github = GitHub(keywords=keywords, n_repos=n_repos)
+    github_repos = github.get_github_query()
+    github_keywords = github.get_github_keywords()
     date = datetime.now().strftime('%Y_%m_%d')
 
-    with pd.ExcelWriter(f'{date}_test.xlsx') as writer:
+    with pd.ExcelWriter(f'{date}.xlsx') as writer:
         twitter_keywords.to_excel(writer, 'twitter_keywords', header=['sum_tfidf'], index_label='term')
         github_repos.to_excel(writer, 'github_repos', index=False, encoding='utf-8')
         github_keywords.to_excel(writer, 'github_keywords', header=['sum_tfidf'], index_label='term', encoding='utf-8')
