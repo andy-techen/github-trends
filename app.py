@@ -60,17 +60,15 @@ filters = dbc.Row(
 
 table_header = [
     html.Thead(
-        [
-            html.Tr(
-                [
-                    html.Th("Name"),
-                    html.Th("Url"),
-                    html.Th("Description"),
-                    html.Th("Forks"),
-                    html.Th("Stars")
-                ]
-            )
-        ]
+        html.Tr(
+            [
+                html.Th("Name"),
+                html.Th("Url"),
+                html.Th("Description"),
+                html.Th("Forks"),
+                html.Th("Stars")
+            ]
+        )
     )
 ]
 
@@ -154,7 +152,7 @@ def update_repo_table(keywords, n_repos):
             html.Tr(
                 [
                     html.Td(row.name),
-                    html.Td(dcc.Link(href=row.url)),
+                    html.Td(html.A(row.url, href=row.url, target='_blank', style={'color':'#1D5286'})),
                     html.Td(row.description),
                     html.Td(row.forks),
                     html.Td(row.stars)
@@ -162,27 +160,32 @@ def update_repo_table(keywords, n_repos):
             )
         )
     try:
-        return dbc.Table([table_header + table_body], hover=True)
+        return [dbc.Table(table_header + [html.Tbody(table_body)], hover=True)]
     # try:
     #     return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
-    except:
+    except Exception as e:
+        print(e)
         return [dbc.Alert("Renew Gihub Token!", color="danger")]
 
 def plot_wordcloud(df, n_words):
 
     words = df.keys().tolist()
-    frequency = (df.values*100).tolist()
+    frequency = np.interp(df.values, (df.values.min(), df.values.max()), (10,100)).tolist()
+    palette = ['#1D5286', '#4A89BF', '#8DB8E2', '#81888F', '#BEC2C5']
+    colors = np.random.choice(palette, size=n_words)
+    x = np.random.choice(n_words, size=n_words) + 0.5 * np.random.rand(n_words)
+    y = np.random.choice(n_words, size=n_words) + 0.5 * np.random.rand(n_words)
     
     figure = go.Figure()
     figure.add_trace(
         go.Scatter(
-            x=np.random.choice(n_words, size=n_words),
-            y=np.random.choice(n_words, size=n_words),
+            x=x,
+            y=y,
             mode='text',
             text=words,
             hoverinfo='text',
             hovertext=['{0}: {1}'.format(w, int(f)) for w, f in zip(words, frequency)],
-            textfont={'size': frequency}
+            textfont={'size': frequency, 'color': colors}
         )
     )
     figure.update_layout(
