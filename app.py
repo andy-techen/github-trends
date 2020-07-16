@@ -60,7 +60,7 @@ filters = dbc.Row(
 
 tab1 = dbc.Row(
     [
-        html.Div(id='repo-table')
+        dbc.Spinner(html.Div(id='repo-table'))
     ],
     justify='center'
 ) 
@@ -132,7 +132,10 @@ def update_repo_table(keywords, n_repos):
     keywords = keywords.split('/')
     github_repos = get_repos(keywords, n_repos=n_repos)[0]
 
-    return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
+    try:
+        return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
+    except:
+        return [dbc.Alert("Renew Gihub Token!", color="danger")]
 
 def plot_wordcloud(df, n_words):
 
@@ -173,7 +176,7 @@ def update_keyword_cloud(keywords, n_repos, n_words):
     github_keywords = get_repos(keywords, n_repos=n_repos)[1]
 
     figure = plot_wordcloud(github_keywords, n_words)
-
+    
     return [figure]
 
 app.layout = html.Div(
