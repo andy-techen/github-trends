@@ -1,3 +1,4 @@
+nltk==3.5
 dash_html_components==1.0.3
 requests==2.24.0
 numpy==1.19.0
