@@ -8,5 +8,4 @@ dash==1.13.4
 pandas==1.0.5
 pybase64==1.0.1
 dash_bootstrap_components==0.10.3
-nltk==3.5
 scikit_learn==0.23.1
