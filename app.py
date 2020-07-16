@@ -58,6 +58,22 @@ filters = dbc.Row(
     justify='center'
 )
 
+table_header = [
+    html.Thead(
+        [
+            html.Tr(
+                [
+                    html.Th("Name"),
+                    html.Th("Url"),
+                    html.Th("Description"),
+                    html.Th("Forks"),
+                    html.Th("Stars")
+                ]
+            )
+        ]
+    )
+]
+
 tab1 = dbc.Row(
     [
         dbc.Spinner(html.Div(id='repo-table'))
@@ -132,8 +148,23 @@ def update_repo_table(keywords, n_repos):
     keywords = keywords.split('/')
     github_repos = get_repos(keywords, n_repos=n_repos)[0]
 
+    table_body = []
+    for row in github_repos.itertuples():
+        table_body.append(
+            html.Tr(
+                [
+                    html.Td(row.name),
+                    html.Td(dcc.Link(href=row.url)),
+                    html.Td(row.description),
+                    html.Td(row.forks),
+                    html.Td(row.stars)
+                ]
+            )
+        )
     try:
-        return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
+        return dbc.Table([table_header + table_body], hover=True)
+    # try:
+    #     return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
     except:
         return [dbc.Alert("Renew Gihub Token!", color="danger")]
 
