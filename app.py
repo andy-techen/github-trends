@@ -12,6 +12,7 @@ THEME = dbc.themes.SIMPLEX
 LOGO = 'https://3u26hb1g25wn1xwo8g186fnd-wpengine.netdna-ssl.com/files/2019/06/moz-logo-white.png'
 
 app = dash.Dash(__name__, external_stylesheets=[THEME])
+server = app.server
 
 header = dbc.Navbar(
     [
