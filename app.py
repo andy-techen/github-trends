@@ -51,7 +51,7 @@ filters = dbc.Row(
             [
                 html.Div(children=[""],id='filters-temp', style={'display': 'none'}),
                 html.P("Number of Repositories", style={'textAlign':'center'}),
-                dbc.Input(id='n-repos', type="number", value=10, min=10, max=30, step=5)
+                dbc.Input(id='n-repos', type="number", value=30, min=10, max=50, step=10)
             ],
             width=2
         )
