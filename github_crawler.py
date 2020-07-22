@@ -20,7 +20,10 @@ import nltk
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
-from secrets import *
+import secrets
+from importlib import reload
+reload(secrets)
+from secrets import t_consumer_key, t_consumer_secret, t_access_token, t_access_secret, g_access_token
 
 # settings-------------------------------------------------------------------
 # base variables
@@ -86,6 +89,7 @@ class GitHub:
         # collect metadata
         q = requests.get(query, headers=token_header)
         if q.status_code != 200:
+            print(q.status_code)
             sys.exit('Renew Github Token!')
         else:
             repos = json.loads(q.content)['items']
@@ -123,7 +127,7 @@ class GitHub:
         repos_df['content'] = repos_df[text_cols].apply(lambda row: ' '.join(row.values.astype(str)), axis=1)
         repos_df.dropna(subset=['content'], inplace=True)
         keywords_df = get_keywords(repos_df['content'])
-        return repos_df.drop(['content'], axis=1), keywords_df.agg('sum').nlargest(n_words)
+        return repos_df, keywords_df.agg('sum').nlargest(n_words)
 
 
 if __name__ == '__main__':

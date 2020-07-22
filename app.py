@@ -10,8 +10,9 @@ import numpy as np
 
 THEME = dbc.themes.SIMPLEX
 LOGO = 'https://3u26hb1g25wn1xwo8g186fnd-wpengine.netdna-ssl.com/files/2019/06/moz-logo-white.png'
+ICON_THEME = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css"
 
-app = dash.Dash(__name__, external_stylesheets=[THEME])
+app = dash.Dash(__name__, external_stylesheets=[THEME, ICON_THEME])
 server = app.server
 
 header = dbc.Navbar(
@@ -66,15 +67,32 @@ table_header = [
                 html.Th("Url"),
                 html.Th("Description"),
                 html.Th("Forks"),
-                html.Th("Stars")
-            ]
+                html.Th("Stars"),
+                html.Th(
+                    [
+                        html.P(
+                            [
+                                "Relevancy ",
+                                html.Span(className="fa fa-question-circle", id="relevancy-q")
+                            ],
+                            style={'margin-bottom':'0em', 'width':'6rem'}
+                        ),
+                        dbc.Tooltip("number of keyword occurrences in name, description & readme", target="relevancy-q", placement="bottom")
+                    ]
+                )
+            ]       
         )
     )
 ]
 
 tab1 = dbc.Row(
     [
-        dbc.Spinner(html.Div(id='repo-table'))
+        dbc.Col(
+            [
+                dbc.Spinner(dbc.Table(id='repo-table', hover=True, responsive=True))
+            ],
+            width=12
+        )
     ],
     justify='center'
 ) 
@@ -146,6 +164,8 @@ def update_repo_table(keywords, n_repos):
     keywords = keywords.split('/')
     github_repos = get_repos(keywords, n_repos=n_repos)[0]
 
+    github_repos['relevancy'] = github_repos['content'].apply(lambda x: sum(x.lower().count(i.lower()) for i in keywords))
+
     table_body = []
     for row in github_repos.itertuples():
         table_body.append(
@@ -155,12 +175,13 @@ def update_repo_table(keywords, n_repos):
                     html.Td(html.A(row.url, href=row.url, target='_blank', style={'color':'#1D5286'})),
                     html.Td(row.description),
                     html.Td(row.forks),
-                    html.Td(row.stars)
+                    html.Td(row.stars),
+                    html.Td(row.relevancy)
                 ]
             )
         )
     try:
-        return [dbc.Table(table_header + [html.Tbody(table_body)], hover=True)]
+        return [table_header + [html.Tbody(table_body)]]
     # try:
     #     return [dbc.Table.from_dataframe(github_repos.drop(['readme'], axis=1), hover=True)]
     except Exception as e:
@@ -223,4 +244,4 @@ app.layout = html.Div(
 )
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(debug=True)#, host='0.0.0.0')
