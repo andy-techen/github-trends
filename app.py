@@ -214,7 +214,7 @@ def plot_wordcloud(df, n_words):
         yaxis=dict(showgrid=False, showticklabels=False, zeroline=False),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        height=450, width=750,
+        height=450, width=800,
         margin=go.layout.Margin(t=10)
     )
 
@@ -244,4 +244,4 @@ app.layout = html.Div(
 )
 
 if __name__ == '__main__':
-    app.run_server(debug=True)#, host='0.0.0.0')
+    app.run_server(debug=True, host='0.0.0.0')
