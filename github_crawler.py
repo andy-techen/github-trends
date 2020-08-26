@@ -20,15 +20,14 @@ import nltk
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
-import secrets
-from importlib import reload
-reload(secrets)
-from secrets import t_consumer_key, t_consumer_secret, t_access_token, t_access_secret, g_access_token
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # settings-------------------------------------------------------------------
 # base variables
 BASE_API = "https://api.github.com/search/repositories?q="
-token_header = {'Authorization': 'token ' + g_access_token}
+token_header = {'Authorization': 'token ' + os.getenv('G_ACCESS_TOKEN')}
 
 # keyword extraction preps
 stop = stopwords.words('english') + list(string.punctuation)
@@ -38,8 +37,8 @@ cv = CountVectorizer(ngram_range=(1,2))
 transformer = TfidfTransformer()
 
 # twitter auth
-auth = OAuthHandler(t_consumer_key, t_consumer_secret)
-auth.set_access_token(t_access_token, t_access_secret)
+auth = OAuthHandler(os.getenv('T_CONSUMER_KEY'), os.getenv('T_CONSUMER_SECRET'))
+auth.set_access_token(os.getenv('T_ACCESS_KEY'), os.getenv('T_ACCESS_SECRET'))
 api = API(auth)
 
 # utility functions----------------------------------------------------------

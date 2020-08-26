@@ -21,21 +21,21 @@ header = dbc.Navbar(
             dbc.NavbarBrand(
                 "Github Trends",
                 href="https://github.com/Dershan219/github-trends"),
-                style={'font-weight':'bold'},
+                style={'fontWeight':'bold'},
             width=1.5
         ),
         dbc.Col(
             dbc.Input(
                 id='keyword', value='Mozilla VPN',
                 type='text', placeholder="Enter Keywords (sep by '/')",
-                style={'height':'36px', 'margin-top':'0px'}
+                style={'height':'36px', 'marginTop':'0px'}
             ),
             width=10
         ),
         dbc.Col(
             dbc.Button(
                 "Search", id="keyword-search", n_clicks=0, color="secondary",
-                style={'height':'36px', 'margin-top':'0px', 'padding':'0rem 1rem'}
+                style={'height':'36px', 'marginTop':'0px', 'padding':'0rem 1rem'}
                 ),
             width=0.5
         ),
@@ -75,7 +75,7 @@ table_header = [
                                 "Relevancy ",
                                 html.Span(className="fa fa-question-circle", id="relevancy-q")
                             ],
-                            style={'margin-bottom':'0em', 'width':'6rem'}
+                            style={'marginBottom':'0em', 'width':'6rem'}
                         ),
                         dbc.Tooltip("number of keyword occurrences in name, description & readme", target="relevancy-q", placement="bottom")
                     ]
@@ -134,7 +134,7 @@ body = dbc.Container(
         html.Br(),
         dbc.Tabs(
             [
-                dbc.Tab(tab1, label="Top Repos", tab_style={'margin-left':'auto'}),
+                dbc.Tab(tab1, label="Top Repos", tab_style={'marginLeft':'auto'}),
                 dbc.Tab(tab2, label="Top Keywords")
             ]
         )
@@ -244,4 +244,4 @@ app.layout = html.Div(
 )
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host='0.0.0.0')
+    app.run_server(debug=True)
