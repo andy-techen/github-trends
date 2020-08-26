@@ -171,13 +171,28 @@ def update_repo_table(keywords, n_repos):
         table_body.append(
             html.Tr(
                 [
-                    html.Td(row.name),
-                    html.Td(html.A(row.url, href=row.url, target='_blank', style={'color':'#1D5286'})),
-                    html.Td(row.description),
-                    html.Td(row.forks),
-                    html.Td(row.stars),
-                    html.Td(row.relevancy)
-                ]
+                    html.Td(
+                        html.Div(row.name, style={'overflowWrap':'break-word', 'width':'8rem'})
+                    ),
+                    html.Td(
+                        html.Div(
+                            html.A(
+                                row.url, href=row.url, target='_blank', 
+                                style={'color':'#1D5286'}
+                            ),
+                            style={'overflowWrap':'break-word', 'width':'12rem'}
+                        )
+                    ),
+                    html.Td(
+                        html.Div(
+                            row.description, 
+                            style={'overflow':'auto', 'width':'30rem', 'maxHeight': '10rem'}
+                        )
+                    ),
+                    html.Td(html.Div(row.forks)),
+                    html.Td(html.Div(row.stars)),
+                    html.Td(html.Div(row.relevancy))
+                ] 
             )
         )
     try:
