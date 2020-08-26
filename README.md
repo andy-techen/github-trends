@@ -15,3 +15,4 @@ A tool to fetch popular repos and keywords on Github/Twitter.
 * numpy==1.19.0
 * python-dotenv==0.14.0
 * scikit_learn==0.23.2
+* gunicorn==18.0
