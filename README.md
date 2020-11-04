@@ -1,6 +1,6 @@
 # github-trends
 A tool to fetch popular repos and keywords on Github/Twitter.  
-Access deployed app at [https://github-trends-moz.herokuapp.com/](https://github-trends-moz.herokuapp.com/)
+Run the app with [app.py](app.py) or access the deployed app at [https://github-trends-moz.herokuapp.com/](https://github-trends-moz.herokuapp.com/)
 
 ## Requirements
 * dash_bootstrap_components==0.10.2
